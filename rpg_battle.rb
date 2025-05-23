@@ -7,6 +7,7 @@ class Constants
   # 行動選択
   ACTION_ATTACK = 1  # こうげき
   ACTION_ESCAPE = 2  # 逃げる
+  ACTION_RECOVERY = 3  # 回復
 
   # こうげきタイプ
   ATTACK_TYPE_NORMAL = 1  # 通常
@@ -48,8 +49,9 @@ class Message
     name = hero.name                    # 名前
     attack = Constants::ACTION_ATTACK   # こうげきの値
     escape = Constants::ACTION_ESCAPE   # 逃げるの値
+    recovery = Constants::ACTION_RECOVERY   # 回復の値
 
-    "\n#{name} のターンです。\n↓行動を選択してください↓\n" + color("yellow", "【#{attack}】こうげき\n【#{escape}】逃げる")
+    "\n#{name} のターンです。\n↓行動を選択してください↓\n" + color("yellow", "【#{attack}】こうげき\n【#{escape}】逃げる\n【#{recovery}】回復")
   end
 
   # 無効な選択肢が入力された
@@ -80,6 +82,13 @@ class Message
     name = target.name   # 名前
 
     "→#{name} に #{damage} のダメージ！"
+  end
+
+  # 回復
+  def self.recovery(target, recovery)
+    name = target.name   # 名前
+
+    "→#{name} は #{recovery} 回復した！"
   end
 
   # キャラクター戦闘不能
@@ -196,6 +205,7 @@ class Game
       # 勇者パーティのターン
       process_heroes_turn()
       break if @all_parties.any? { |party| party_destroyed?(party) } || @escape_flg  # 全滅チェックと逃げるフラグチェック
+      
 
       # モンスターパーティのターン
       process_monsters_turn()
@@ -251,6 +261,7 @@ class Game
   def process_heroes_turn
     attack_action = Constants::ACTION_ATTACK  # こうげき
     escape_action = Constants::ACTION_ESCAPE  # 逃げる
+    recovery_action = Constants::ACTION_RECOVERY  # 回復
 
     @heroes.each do |character|
       next unless character.is_alive # 戦闘不能になったキャラクターは行動をスキップ
@@ -273,10 +284,21 @@ class Game
           target_monster = @monsters.select(&:is_alive).sample          # 対象を絞る
           execute_attack(character, target_monster) if target_monster   # こうげき処理
           break
+
         when escape_action
           # 逃げる
           execute_escape(character)   # 逃げる処理
           return
+        when recovery_action
+          # 回復処理
+          recovery_amount = rand(8..15)  # 回復量をランダムに設定（例：8〜15）
+          character.hp += recovery_amount
+
+          # HPの上限チェック（必要なら上限HPを設ける）
+          character.hp = [character.hp, character.max_hp].min if character.respond_to?(:max_hp)
+
+          display_message(Message.recovery(character, recovery_amount), true)  # 回復メッセージ
+          break
         else
           # 無効な選択
           display_message(Message.invalid_choice())  # エラーメッセージ
