@@ -3,6 +3,8 @@ class Constants
   # ステータス
   HP_MIN = 0           # HP最小値
   ATTACK_VARIANCE = 3  # こうげき力のブレ幅
+  HIT_PROBABILITY = 0.8  # 攻撃が当たる確率（例：80%）
+
 
   # 行動選択
   ACTION_ATTACK = 1  # こうげき
@@ -32,6 +34,10 @@ class Message
   # ラウンド数
   def self.round(round)
     color("cyan", "\n=== ラウンド #{round} ===")
+  end
+
+  def self.miss(attacker)
+    color("blue", "→#{attacker.name} の攻撃は外れた！")
   end
 
   # キャラクターのステータス
@@ -305,6 +311,11 @@ class Game
         end
       end
     end
+  # 攻撃が外れた
+  def self.miss(attacker)
+    color("blue", "→#{attacker.name} の攻撃は外れた！")
+  end
+
   end
 
   # モンスター側のターンを処理
@@ -323,10 +334,17 @@ class Game
     # こうげきメッセージ
     display_message(Message.attack(attacker), true)
 
-    # ダメージ処理
-    damage = attacker.calculate_damage()                      # ダメージ計算
-    target.receive_damage(damage)                           # ダメージ反映
-    display_message(Message.damage(target, damage), true)   # メッセージ
+    # 命中判定
+  if rand < Constants::HIT_PROBABILITY
+    # 攻撃が当たった場合
+    damage = attacker.calculate_damage()
+    target.receive_damage(damage)
+    display_message(Message.damage(target, damage), true)
+    display_message(Message.death(target), true) unless target.is_alive
+  else
+    # 攻撃が外れた場合
+    display_message(Message.miss(attacker), true)
+  end
 
     # 戦闘不能メッセージ
     display_message(Message.death(target), true) unless target.is_alive
