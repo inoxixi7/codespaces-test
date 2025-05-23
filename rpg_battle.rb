@@ -154,3 +154,5 @@ end
 # ゲーム開始
 game = Game.new
 game.start()
+
+e
