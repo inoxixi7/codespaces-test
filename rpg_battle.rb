@@ -42,7 +42,7 @@ class Message
 
   # キャラクターのステータス
   def self.status(character)
-    mark = character.is_alive ? "・" : color("red", "×")  # マーカー（生存:戦闘不能）
+    mark = character.is_alive ? "○" : color("red", "×")  # マーカー（生存:戦闘不能）
     name = character.name                                 # 名前
     hp = character.hp                                     # HP
     attack_damage = character.attack_damage               # こうげき力
